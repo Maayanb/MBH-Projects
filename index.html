@@ -240,8 +240,8 @@
             player.dy += player.gravity;
 
             // Ground collision
-            if (player.y > rect.height - 80) {
-                player.y = rect.height - 80;
+            if (player.y > rect.height - 120) {
+                player.y = rect.height - 120;
                 player.dy = 0;
                 player.isJumping = false;
                 player.currentJumps = 0; // Reset jump counter when landing
