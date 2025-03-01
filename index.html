@@ -26,16 +26,19 @@
             left: 0;
             width: 100%;
             z-index: 10;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         h1 {
             margin: 5px 0;
-            font-size: 6vw;
+            font-size: 24px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         p {
             margin: 5px 0;
-            font-size: 4vw;
+            font-size: 18px;
+            font-weight: bold;
         }
         canvas {
             background-color: white;
@@ -53,7 +56,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             padding: 10px 20px;
-            font-size: 5vw;
+            font-size: 20px;
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
@@ -66,7 +69,7 @@
             bottom: 20px;
             width: 100%;
             text-align: center;
-            font-size: 4vw;
+            font-size: 18px;
             color: rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
@@ -114,7 +117,7 @@
         
         window.addEventListener("resize", resizeCanvas);
         
-        // Load the original sloth image
+        // Load the original sloth image as a backup
         const slothImage = new Image();
         slothImage.src = 'https://tse3.mm.bing.net/th?id=OIP.wZX54TSHH67ayJTNR0caaQHaHa&pid=Api';
         
@@ -126,7 +129,10 @@
             gravity: 0.5,
             jumpStrength: -7,
             image: slothImage,
-            isJumping: false
+            isJumping: false,
+            // Emoji states
+            groundEmoji: "🦥", // sloth emoji for ground state
+            jumpEmoji: "🐵"    // jumping state (using monkey face as it's more visible)
         };
 
         let score = 0;
@@ -158,17 +164,20 @@
             // Calculate size based on screen dimensions
             player.size = Math.min(rect.width, rect.height) * 0.15;
             
-            ctx.drawImage(
-                player.image, 
-                player.x - player.size / 2, 
-                player.y - player.size / 2, 
-                player.size, 
-                player.size
-            );
+            // Draw the appropriate emoji based on player state
+            const emoji = player.isJumping ? player.jumpEmoji : player.groundEmoji;
+            ctx.font = `${player.size}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(emoji, player.x, player.y);
         }
 
         function drawCookies() {
-            ctx.font = `${Math.min(canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height) * 0.1}px Arial`;
+            const cookieSize = Math.min(canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height) * 0.1;
+            ctx.font = `${cookieSize}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
             cookies.forEach(cookie => {
                 ctx.fillText("🍪", cookie.x, cookie.y);
             });
@@ -198,6 +207,7 @@
                     score++;
                     scoreDisplay.textContent = score;
                     player.dy = player.jumpStrength;
+                    player.isJumping = true;
                     cookies.splice(i, 1);
                 }
             }
@@ -261,6 +271,7 @@
             player.x = rect.width / 2;
             player.y = rect.height - 80;
             player.dy = 0;
+            player.isJumping = false;
             
             gameRunning = true;
             restartButton.style.display = "none";
@@ -287,13 +298,8 @@
             if (gameRunning) jump();
         });
         
-        // Initialize once the sloth image is loaded
-        slothImage.onload = init;
-        
-        // Fallback init in case the image loading is delayed
-        window.onload = function() {
-            setTimeout(init, 1000);
-        };
+        // Initialize the game
+        window.onload = init;
     </script>
 </div>
 </body>
