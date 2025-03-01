@@ -117,7 +117,7 @@
         
         window.addEventListener("resize", resizeCanvas);
         
-        // Load the original sloth image as a backup
+        // Load the original sloth image
         const slothImage = new Image();
         slothImage.src = 'https://tse3.mm.bing.net/th?id=OIP.wZX54TSHH67ayJTNR0caaQHaHa&pid=Api';
         
@@ -127,12 +127,12 @@
             size: 60,
             dy: 0,
             gravity: 0.5,
-            jumpStrength: -7,
+            jumpStrength: -12, // Stronger jump
+            maxJumps: 2,       // Allow double jump
+            currentJumps: 0,   // Track jumps used
             image: slothImage,
             isJumping: false,
-            // Emoji states
-            groundEmoji: "🦥", // sloth emoji for ground state
-            jumpEmoji: "🐵"    // jumping state (using monkey face as it's more visible)
+            groundEmoji: "🦥"  // sloth emoji for ground state
         };
 
         let score = 0;
@@ -164,12 +164,22 @@
             // Calculate size based on screen dimensions
             player.size = Math.min(rect.width, rect.height) * 0.15;
             
-            // Draw the appropriate emoji based on player state
-            const emoji = player.isJumping ? player.jumpEmoji : player.groundEmoji;
-            ctx.font = `${player.size}px Arial`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(emoji, player.x, player.y);
+            if (player.isJumping) {
+                // Use the sloth image when jumping
+                ctx.drawImage(
+                    player.image, 
+                    player.x - player.size / 2, 
+                    player.y - player.size / 2, 
+                    player.size, 
+                    player.size
+                );
+            } else {
+                // Use sloth emoji when on ground
+                ctx.font = `${player.size}px Arial`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(player.groundEmoji, player.x, player.y);
+            }
         }
 
         function drawCookies() {
@@ -206,8 +216,12 @@
                     cookie.hit = true;
                     score++;
                     scoreDisplay.textContent = score;
+                    
+                    // Reset jumps when collecting a cookie to allow higher jumps
+                    player.currentJumps = 0;
                     player.dy = player.jumpStrength;
                     player.isJumping = true;
+                    
                     cookies.splice(i, 1);
                 }
             }
@@ -230,6 +244,7 @@
                 player.y = rect.height - 80;
                 player.dy = 0;
                 player.isJumping = false;
+                player.currentJumps = 0; // Reset jump counter when landing
             }
 
             moveCookies();
@@ -238,9 +253,11 @@
         }
 
         function jump() {
-            if (!player.isJumping) {
+            // Allow jumping if on ground or haven't used all jumps
+            if (!player.isJumping || player.currentJumps < player.maxJumps) {
                 player.dy = player.jumpStrength;
                 player.isJumping = true;
+                player.currentJumps++;
             }
         }
 
@@ -249,8 +266,8 @@
                 if (!gameRunning) return;
                 
                 const rect = canvas.getBoundingClientRect();
-                let yPosition = Math.random() * (rect.height - 200);
-                if (yPosition < 100) yPosition = 100;
+                // Distribute cookies more evenly across the screen height
+                let yPosition = 100 + Math.random() * (rect.height - 250);
                 
                 const speedFactor = rect.width / 400;
                 cookies.push({ 
@@ -272,6 +289,7 @@
             player.y = rect.height - 80;
             player.dy = 0;
             player.isJumping = false;
+            player.currentJumps = 0;
             
             gameRunning = true;
             restartButton.style.display = "none";
@@ -298,8 +316,13 @@
             if (gameRunning) jump();
         });
         
-        // Initialize the game
-        window.onload = init;
+        // Initialize once the sloth image is loaded
+        slothImage.onload = init;
+        
+        // Fallback init in case the image loading is delayed
+        window.onload = function() {
+            setTimeout(init, 1000);
+        };
     </script>
 </div>
 </body>
