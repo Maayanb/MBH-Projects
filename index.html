@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chumpi Bounce – Catch the Cookies</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: white;
+            color: black;
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: white;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #restartButton {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chumpi Bounce – Catch the Cookies!</h1>
+    <p>Jump and catch as many cookies as you can! 🍪</p>
+    <p>Score: <span id="score">0</span></p>
+    <canvas id="gameCanvas"></canvas>
+    <button id="restartButton" onclick="restartGame()">Play Again?</button>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const restartButton = document.getElementById("restartButton");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        const slothImage = new Image();
+        slothImage.src = 'https://tse3.mm.bing.net/th?id=OIP.wZX54TSHH67ayJTNR0caaQHaHa&pid=Api';
+
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height - 80,
+            size: 60,
+            dy: 0,
+            gravity: 0.5,
+            jumpStrength: -7,
+            image: slothImage
+        };
+
+        let score = 0;
+        let cookies = [];
+        let gameRunning = true;
+
+        function drawPlayer() {
+            ctx.drawImage(player.image, player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
+        }
+
+        function drawCookies() {
+            ctx.font = "50px Arial";
+            cookies.forEach(cookie => {
+                ctx.fillText("🍪", cookie.x, cookie.y);
+            });
+        }
+
+        function moveCookies() {
+            if (!gameRunning) return;
+            cookies.forEach(cookie => {
+                cookie.x -= cookie.speed;
+            });
+            cookies = cookies.filter(cookie => cookie.x > -100);
+        }
+
+        function checkCollision() {
+            cookies.forEach((cookie, index) => {
+                let distance = Math.hypot(player.x - cookie.x, player.y - cookie.y);
+                if (distance < 60 && !cookie.hit) {
+                    cookie.hit = true;
+                    score++;
+                    scoreDisplay.textContent = score;
+                    player.dy = player.jumpStrength;
+                    cookies.splice(index, 1);
+                }
+            });
+        }
+
+        function update() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawCookies();
+
+            player.y += player.dy;
+            player.dy += player.gravity;
+
+            if (player.y > canvas.height - 80) {
+                player.y = canvas.height - 80;
+                player.dy = 0;
+            }
+
+            moveCookies();
+            checkCollision();
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === " ") {
+                player.dy = player.jumpStrength;
+            }
+        });
+        
+        document.addEventListener("touchstart", function () {
+            player.dy = player.jumpStrength;
+        });
+
+        setInterval(() => {
+            if (!gameRunning) return;
+            let yPosition = Math.random() * (canvas.height - 200);
+            cookies.push({ x: canvas.width, y: yPosition, speed: 3 + Math.random() * 2, hit: false });
+        }, 1500);
+
+        slothImage.onload = update;
+    </script>
+</body>
+</html>
